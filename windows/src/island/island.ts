@@ -16,6 +16,7 @@ import {
 import { Sound } from "../core/sound";
 import { State } from "../core/state";
 import { SPOTIFY_ID, Spotify, islandDances } from "../core/spotify";
+import { WhatsApp, whatsappHeight } from "../core/whatsapp";
 import { BotEngine, hexToRGB } from "../mochi/engine";
 import { Greeting } from "../mochi/greeting";
 import { createMiniBot, pruneMiniBots, syncMiniBotStates, tickMiniBots } from "../mochi/minibots";
@@ -29,6 +30,7 @@ import { buildHeader, buildViews, type ViewActions, type ViewHost } from "../vie
 import { h } from "../views/dom";
 import { IslandStateMachine } from "./fsm";
 import { refreshHookPills } from "./integrations";
+import { grewAt, wiggling } from "./unread";
 import { restoreAlertFocus } from "./hooks";
 import { DesktopLink } from "./desktop";
 import type { ViewCommand } from "./shortcuts";
@@ -163,7 +165,20 @@ export class Island {
     State.subscribe(() => {
       this.dirty = true;
       this.ensureRunning();
+      // The WhatsApp card came to the front, or a conversation opened or closed in it: the open
+      // island takes its new height (a view change resizes it by itself).
+      const wa = this.whatsappH();
+      if (wa !== this.lastWhatsappH) {
+        this.lastWhatsappH = wa;
+        if (State.mode === "expanded") this.animateGeometry(this.targetSize().h < this.height.value);
+      }
     });
+  }
+
+  private lastWhatsappH: number | null = null;
+
+  private whatsappH(): number | null {
+    return whatsappHeight(State.mode, State.view, State.focusTask?.id ?? null, WhatsApp.view.on, WhatsApp.reading);
   }
 
   /** The request has its answer: the card goes and the session carries on. */
@@ -224,13 +239,13 @@ export class Island {
           integration_stripe: "https://dashboard.stripe.com/payments",
           integration_notion: "https://notion.so",
           integration_calcom: "https://app.cal.com/bookings",
-          // No WhatsApp app to bring forward here as on the Mac: WhatsApp Web, in the browser.
-          integration_whatsapp: "https://web.whatsapp.com",
         };
         if (task.id === CLAUDE_DESKTOP_ID) void Bridge.openClaudeDesktop();
         else if (task.id === "integration_claude" || task.sessionId) {
           void Bridge.openSession(task.sessionId ?? null, task.sessionCwd ?? null);
         } else if (task.id === "integration_n8n") void Bridge.openN8n();
+        // WhatsApp Desktop at the open conversation; WhatsApp Web when it isn't installed.
+        else if (task.id === "integration_whatsapp") void Bridge.whatsappOpenApp();
         else if (task.id === "integration_gitea") void Bridge.openGitea();
         else if (task.id === SPOTIFY_ID) void Bridge.spotifyOpen();
         else if (urls[task.id]) void Bridge.openUrl(urls[task.id]);
@@ -771,6 +786,8 @@ export class Island {
     if (State.mode === "expanded" && State.view === "question" && State.pendingApproval?.questions) {
       h = QUESTION_PICKER_H;
     }
+    // The WhatsApp card in front: taller, so it can be read.
+    h = this.whatsappH() ?? h;
     const r = State.mode === "expanded" ? EXPANDED_CORNER : ROUNDED_CORNER;
     return { w, h, r };
   }
@@ -1416,12 +1433,15 @@ export class Island {
     this.miniGrid.style.opacity = showGrid ? "1" : "0";
     if (showGrid) {
       const others = State.otherTasks.slice(0, 4);
-      const key = others.map((t) => t.id).join("|");
+      // A pill whose count just grew (island/unread.ts) is redrawn to wiggle.
+      const key = others.map((t) => `${t.id}:${grewAt(t.id)}`).join("|");
       if (this.miniGrid.dataset.key !== key) {
         this.miniGrid.dataset.key = key;
         this.miniGrid.replaceChildren();
         for (const t of others) {
-          this.miniGrid.append(createMiniBot(t, 13));
+          const mini = createMiniBot(t, 13);
+          if (wiggling(t.id)) mini.classList.add("wiggle");
+          this.miniGrid.append(mini);
         }
         pruneMiniBots();
       }

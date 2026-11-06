@@ -333,6 +333,7 @@ this way. Linux has no Outlook: the pill is Windows only.
 | What you do | What happens |
 |---|---|
 | Open the Mail pill | Your newest messages, unread ones tinted, a ⚑ on the flagged ones. The magnifier searches every inbox: free words, `from:anne`, `subject:"May quote"`. Filters: All, Unread, Important, Today |
+| New mail while another card is open | The Mail pill counts the unread mail that came in since you last opened its card, and wiggles when the count grows. Opening the card clears it; mail that was already unread when Coucou started is not counted |
 | Click a message | Its sender, subject and the start of its text. **Open in Outlook**, **Reply** (Outlook's own window: nothing is sent from Coucou), **Mark as read**, **Important**, **Junk**, and in ⋯ **Always important (VIP)** or **Always ignore this sender** |
 | Coucou → Mail → Overview | **Sort new messages automatically** (off by default): only what arrives after you turn it on, each message once. VIPs are flagged, banned words send to Junk, then the first rule that matches acts. A journal of every action, each with **Undo** |
 | Coucou → Mail → Rules, Banned words, VIP | "If the sender / domain / subject / text / account contains … then Junk / important / read / move to a folder". Banned words are whole words: "sale" does not catch "Salesforce". A VIP is an address or a whole domain (`@client.com`) |
@@ -368,15 +369,30 @@ account only, because WhatsApp may restrict accounts that abuse it.
 
 - The island lists one row per conversation, with its initials, name, last
   message and unread count. Photos, voice messages and other media show as a
-  label; Coucou never downloads them.
+  label; Coucou never downloads them. With the WhatsApp card in front, the
+  open island is taller, so more conversations show.
+- An open conversation takes the whole island, as tall as the chat, with its
+  messages a size up; the other pills come back with ‹ or Escape.
 - Click a conversation for its last ten messages and a reply field. **Enter**
   sends, **Shift+Enter** starts a new line and **Escape** goes back. Nothing is
   ever sent without your Enter or click.
-- On a new message Mochi smiles, with the "pop" sound if sounds are on.
+- On a new message Mochi smiles, with the "pop" sound if sounds are on. While
+  another card is open, the WhatsApp pill counts the messages that came in
+  since you last opened its card, and wiggles when one arrives; opening the
+  card clears the count.
 - Groups stay quiet unless you are mentioned. A right-click on a row ignores
   that chat.
 - Read receipts are sent only when you open a conversation, or only when you
   reply if you turn that setting off.
+- The magnifier finds someone by name or number, among the conversations and
+  your WhatsApp contacts (GOWA's address book). Click them, or pick them with
+  **↓ ↑** and **Enter**, and their conversation opens in the card, empty if you
+  have not written yet: type, then **Enter**, as for a reply, with the same
+  limits (one person, a few messages a minute). A new conversation starts only
+  with someone in your contacts, never a typed-in number; if Coucou can't
+  start one, WhatsApp opens at their chat instead. Closed without a word, it
+  leaves the list. Nothing is sent from the search itself, and the contacts
+  are kept only while it is open.
 
 **Your own gateway**
 
@@ -397,8 +413,10 @@ API key), and change the port of Coucou's webhook (47823).
 
 - There is no macOS Focus to follow, so "Stay quiet during a Focus" is not
   offered.
-- The card's ↗ opens WhatsApp Web, as there is no WhatsApp app here to bring
-  forward.
+- The card's ↗ opens WhatsApp Desktop (the Microsoft Store app) at the
+  conversation open in the card, when it is a person's. Without an app for
+  `whatsapp:` links (on Linux, the default `x-scheme-handler/whatsapp`), it
+  opens WhatsApp Web in the browser, at the same chat.
 - You type the path to your own GOWA binary instead of picking it.
 
 ## New versions
