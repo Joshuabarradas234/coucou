@@ -177,6 +177,9 @@ export function buildWhatsAppCard(host: WhatsAppCardHost): WhatsAppCard {
     host.keyboard(true);
     window.setTimeout(() => field.focus(), 120);
     sync();
+    // The island grows for it, the whole width and the chat's height (whatsappHeight).
+    WhatsApp.reading = true;
+    State.notify();
   }
 
   function close() {
@@ -188,6 +191,8 @@ export function buildWhatsAppCard(host: WhatsAppCardHost): WhatsAppCard {
     host.keyboard(false);
     listKey = "";
     sync();
+    WhatsApp.reading = false;
+    State.notify();
   }
 
   async function send() {
